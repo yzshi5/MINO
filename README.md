@@ -11,7 +11,7 @@ by Yaozhong Shi, Zachary E. Ross, Domniki Asimaki, Kamyar Azizzadenesheli
 ![image](fig/inference.PNG)
 
 ## Setup
-placeholder
+First download the processed dataset from [https://huggingface.co/datasets/Yaozhong/MINO](https://huggingface.co/datasets/Yaozhong/MINO), unzip it and place all files in the dataset folder 
 
 ## Usage
 placeholder
