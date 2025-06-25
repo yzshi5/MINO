@@ -5,10 +5,10 @@
 by Yaozhong Shi, Zachary E. Ross, Domniki Asimaki, Kamyar Azizzadenesheli
 
 ## Model architecture
-![image](https://github.com/user-attachments/assets/9d0444ca-cc4f-4987-8628-777d0e2cc3b1)
+![image](fig/model.PNG)
 
 ## Inference and zero-shot generation
-![image](https://github.com/user-attachments/assets/3924187d-5fc9-492e-9d7a-179dc587e6cc)
+![image](fig/inference.PNG)
 
 ## Setup
 placeholder
