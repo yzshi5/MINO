@@ -41,7 +41,7 @@ python -m ipykernel install --user --name=mino
 
 `tutorials` contains three representative experiments 
 
-we will release the training scripts for all datasets very soon. 
+we will release the training scripts for all datasets and the unconditional version (can be directly used as PDE surrgoate model) very soon. 
 
 
 
