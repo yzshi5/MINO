@@ -15,3 +15,26 @@ First download the processed dataset from [https://huggingface.co/datasets/Yaozh
 
 To set up the environment, create a conda environment
 
+```
+# clone project
+git clone https://github.com/yzshi5/MINO.git
+cd MINO
+
+# create conda environment
+conda env create -f environment.yml
+
+# Activate the `mino` environment
+conda activate mino
+```
+
+
+
+
+Install the `ipykernel` to run the code in a jupyter notebook
+```
+conda install -c anaconda ipykernel
+
+pip install ipykernel
+
+python -m ipykernel install --user --name=mino
+```
