@@ -43,5 +43,13 @@ python -m ipykernel install --user --name=mino
 
 we will release the training scripts for all datasets and the unconditional version (can be directly used as PDE surrgoate model) very soon. 
 
+## Reference
+```bibtex
+@article{shi2025mesh,
+  title={Mesh-Informed Neural Operator: A Transformer Generative Approach},
+  author={Shi, Yaozhong and Ross, Zachary E and Asimaki, Domniki and Azizzadenesheli, Kamyar},
+  journal={arXiv preprint arXiv:2506.16656},
+  year={2025}
+}
 
 
