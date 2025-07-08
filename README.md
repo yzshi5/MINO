@@ -69,6 +69,8 @@ https://github.com/EmilienDupont/neural-function-distributions
 
 https://catalog.ngc.nvidia.com/orgs/nvidia/teams/modulus/resources/modulus_datasets_cylinder-flow
 ## Reference
+If you find this repository useful for your research, please consider citing our work
+
 ```bibtex
 @article{shi2025mesh,
   title={Mesh-Informed Neural Operator: A Transformer Generative Approach},
