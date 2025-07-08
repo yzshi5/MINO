@@ -56,6 +56,18 @@ Set `eval` as 1 for inference only, check `exp` folder for more details,
 
 The unconditional version for PDE solving will be released in two days
 
+## Acknowledgement
+Special thanks to the following GitHub repositories for their valuable datasets:
+
+https://github.com/neuraloperator/neuraloperator
+
+https://github.com/pdebench/PDEBench
+
+https://github.com/computational-imaging/GraphPDE
+
+https://github.com/EmilienDupont/neural-function-distributions
+
+https://catalog.ngc.nvidia.com/orgs/nvidia/teams/modulus/resources/modulus_datasets_cylinder-flow
 ## Reference
 ```bibtex
 @article{shi2025mesh,
