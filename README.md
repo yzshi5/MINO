@@ -41,7 +41,20 @@ python -m ipykernel install --user --name=mino
 
 `tutorials` contains three representative experiments 
 
-we will release the training scripts for all datasets and the unconditional version (can be directly used as PDE surrgoate model) very soon. 
+## Run training scripts
+active the conda envs in the terminal, then go to the (unzip) project folder
+```
+conda activate mino
+cd MINO
+```
+
+Training scripts for all experiments are available under `scripts` folder. To run the Navier-Stokes experiments for MINO-T, simply run 
+```
+bash scripts/NS_MINO_T.sh
+```
+Set `eval` as 1 for inference only, check `exp` folder for more details, 
+
+The unconditional version for PDE solving will be released in two days
 
 ## Reference
 ```bibtex
