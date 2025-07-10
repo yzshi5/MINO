@@ -54,7 +54,6 @@ bash scripts/NS_MINO_T.sh
 ```
 Set `eval` as 1 for inference only, check `exp` folder for more details, 
 
-The unconditional version for PDE solving will be released in two days
 
 ## Acknowledgement
 Special thanks to the following GitHub repositories for their valuable datasets:
