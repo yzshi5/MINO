@@ -43,7 +43,7 @@ class EncoderSupernodes(nn.Module):
         
         # percieverBlock and DiT perceiver Block
         if cond_dim is None:
-            block_ctor = partial(PerceiverBlock, kv_dim=enc_dim, init_weights=init_weights, init_gate_zero=init_gate_zero)
+            block_ctor = partial(PerceiverBlock, kv_dim=enc_dim, init_weights=init_weights)
         else:
             block_ctor = partial(DitPerceiverBlock, cond_dim=cond_dim, kv_dim=enc_dim, 
                                  init_weights=init_weights, init_gate_zero=init_gate_zero)
