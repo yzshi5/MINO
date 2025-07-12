@@ -4,7 +4,7 @@ from torch import nn
 
 # the code is modified from UPT 
 class MINO(nn.Module):
-    def __init__(self, conditioner, encoder,  decoder):
+    def __init__(self, encoder,  decoder, conditioner=None):
         super().__init__()
         self.conditioner = conditioner
         self.encoder = encoder
@@ -15,17 +15,19 @@ class MINO(nn.Module):
             input_feat, 
             input_pos,
             query_pos, # fixed
-            timestep
+            timestep=None
     ):        
         
         x_dim = input_pos.shape[1]
         n_chan = input_feat.shape[1]
         batch_size = len(input_feat)
-        
-        if timestep.dim() == 0 or timestep.numel() == 1:
-            timestep = torch.ones(batch_size, device=timestep.device) * timestep
-            
-        condition = self.conditioner(timestep) # [batch_size, dim*4]
+
+        if self.conditioner is not None:
+            if timestep.dim() == 0 or timestep.numel() == 1:
+                timestep = torch.ones(batch_size, device=timestep.device) * timestep
+            condition = self.conditioner(timestep) # [batch_size, dim*4]
+        else:
+            condition = None
 
         output_pos = input_pos.permute(0, 2, 1) 
         output_feat = input_feat.permute(0, 2, 1)
