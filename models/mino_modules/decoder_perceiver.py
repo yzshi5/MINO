@@ -45,21 +45,20 @@ class DecoderPerceiver(nn.Module):
 
         # blocks
         if cond_dim is None:
-            block_ctor = partial(PerceiverBlock, kv_dim=dim, cond_dim=cond_dim)
+            block_ctor = partial(PerceiverBlock, kv_dim=dim)
         else:
-            block_ctor = partial(DitPerceiverBlock, kv_dim=dim, cond_dim=cond_dim)
+            block_ctor = partial(DitPerceiverBlock, kv_dim=dim, cond_dim=cond_dim, init_gate_zero=init_gate_zero)
 
         self.blocks = nn.ModuleList([
             block_ctor(
                 dim=dim,
                 num_heads=num_heads,
                 init_weights=init_weights,
-                init_gate_zero=init_gate_zero,
             )
             for _ in range(depth)
         ])
         
-        # DiT perceiver
+        # DiT perceiver or perceiver
         self.pos_embed = ContinuousSincosEmbed(
             dim=perc_dim,
             ndim=ndim,
