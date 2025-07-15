@@ -1,7 +1,7 @@
 python "exp/exp_ns_T.py" \
     --device 'cuda:0' \
-    --data_path 'your_path/dataset/N_S' \
-    --spath 'your_path/saved_models/MINO_T_NS' \
+    --data_path '/home/yshi/PDE_solving/dataset/MINO_dataset/N_S'\
+    --spath '/home/yshi/PDE_solving/dataset/saved/MINO_T_NS' \
     --x_dim 2 \
     --dims 64 64 \
     --query_dims 16 16 \
