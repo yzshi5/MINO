@@ -69,11 +69,6 @@ class DecoderPerceiver(nn.Module):
             nn.GELU(),
             LinearProjection(perc_dim, perc_dim, init_weights=init_weights),
         )        
-     
-        if cond_dim is None:
-            block_ctor = partial(PerceiverBlock, init_gate_zero=init_gate_zero)
-        else:
-            block_ctor = partial(DitPerceiverBlock, cond_dim=cond_dim, init_gate_zero=init_gate_zero)
 
         self.query_proj = nn.Sequential(
             LinearProjection(perc_dim*2, perc_dim*2, init_weights=init_weights),
