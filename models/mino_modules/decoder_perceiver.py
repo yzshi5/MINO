@@ -101,8 +101,14 @@ class DecoderPerceiver(nn.Module):
         query = self.query_proj(torch.cat([query_pos, query_val], dim=-1))
         
         # apply the cross attention DiT
+        # cros attention + self-attention
+        block_id = 0
         for block in self.blocks:
-            x = block(q=query, kv=x, **cond_kwargs)
+            if block_id == 0:
+                x = block(q=query, kv=x, **cond_kwargs)
+            else:
+                x = block(q=x, kv=x, **cond_kwargs) #self attention
+            block_id = block_id+1
 
         x = self.pred(x)
         
