@@ -40,28 +40,13 @@ from models.mino_modules.encoder_supernodes_gno_cross_attention import EncoderSu
 
 # ## Parameters
 
-# In[2]:
-plt.plot([1, 2, 3, 4])
-
-torch.cuda.is_available()
-
-
-# In[4]:
-# print current hostname (computation node)
-import socket
-
-print(socket.gethostname())
-
-
-# In[10]:
-
 
 dims = [85, 85]
 query_dims = [16, 16]
 x_dim = 2
 
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
-spath = Path('/home/yshi/PDE_solving/dataset/saved/MINO_T_Darcy_PDE')
+spath = Path('datapath/MINO_T_Darcy_PDE')
 
 spath.mkdir(parents=True, exist_ok=True)
 saved_model = False  # True # save model
@@ -383,8 +368,6 @@ for ep in range(1, epochs + 1):
 
 
 # ## Evaluation
-
-# In[7]:
 
 
 # load the trained model
