@@ -41,7 +41,6 @@ from models.mino_modules.encoder_supernodes_gno_cross_attention import EncoderSu
 # ## Parameters
 
 # In[2]:
-plt.plot([1, 2, 3, 4])
 
 torch.cuda.is_available()
 
@@ -56,15 +55,15 @@ print(socket.gethostname())
 # In[10]:
 
 
-dims = [85, 85]
+dims = [64, 64]
 query_dims = [16, 16]
 x_dim = 2
 
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
-spath = Path('/home/yshi/PDE_solving/dataset/saved/MINO_T_Darcy_PDE')
+spath = Path('/home/yshi/PDE_solving/dataset/saved/MINO_T_NS_time_PDE')
 
 spath.mkdir(parents=True, exist_ok=True)
-saved_model = False  # True # save model
+saved_model = True # save model
 save_int = 500
 
 # model hyperparameters
@@ -74,7 +73,7 @@ num_heads = 4
 
 ## training parameters
 epochs = 500
-batch_size = 4
+batch_size = 2
 
 
 # ### Dataset and Dataloder
@@ -147,9 +146,10 @@ batch_size = 4
 
 
 # datapath
-data_path = Path('/home/yshi/PDE_solving/dataset/MINO_PDE/Darcy_421')
-train_path = data_path / 'piececonst_r421_N1024_smooth1.mat'
-test_path = data_path / 'piececonst_r421_N1024_smooth2.mat'
+data_path = Path('/home/yshi/PDE_solving/dataset/MINO_PDE/NS_time')
+data_path = data_path / 'NavierStokes_V1e-5_N1200_T20.mat'
+#train_path = data_path / 'piececonst_r421_N1024_smooth1.mat'
+#test_path = data_path / 'piececonst_r421_N1024_smooth2.mat'
 
 
 # In[6]:
@@ -160,61 +160,60 @@ test_path = data_path / 'piececonst_r421_N1024_smooth2.mat'
 
 ntrain = 1000
 ntest = 200
-downsample = 5
+
+T_in = 10
+T = 10
+step = 1 # one step prediction 
+
+downsample = 1
 
 r = downsample
-h = int(((421 - 1) / r) + 1)  # 85
-s = h
-dx = 1.0 / s
+h = int(((64- 1) / r) + 1)  # 85
 
-train_data = scio.loadmat(train_path)
-x_train = train_data['coeff'][:ntrain, ::r, ::r][:, :s, :s]
-x_train = torch.from_numpy(x_train).float()
-x_train = torch.flatten(x_train.unsqueeze(1), start_dim=2)
+data = scio.loadmat(data_path)
+train_a = data['u'][:ntrain, ::r, ::r, :T_in][:, :h, :h, :]
+train_a = train_a.reshape(train_a.shape[0], -1, train_a.shape[-1])
+train_a = torch.from_numpy(train_a)
+train_a = train_a.permute(0, 2, 1)
 
-y_train = train_data['sol'][:ntrain, ::r, ::r][:, :s, :s]
-y_train = torch.from_numpy(y_train)
-y_train = torch.flatten(y_train.unsqueeze(1), start_dim=2)
+train_u = data['u'][:ntrain, ::r, ::r, T_in:T + T_in][:, :h, :h, :]
+train_u = train_u.reshape(train_u.shape[0], -1, train_u.shape[-1])
+train_u = torch.from_numpy(train_u)
+train_u = train_u.permute(0, 2, 1)
 
-test_data = scio.loadmat(test_path)
-x_test = test_data['coeff'][:ntest, ::r, ::r][:, :s, :s]
-x_test = torch.from_numpy(x_test).float()
-x_test = torch.flatten(x_test.unsqueeze(1), start_dim=2)
 
-y_test = test_data['sol'][:ntest, ::r, ::r][:, :s, :s]
-y_test = torch.from_numpy(y_test)
-y_test = torch.flatten(y_test.unsqueeze(1), start_dim=2)
+test_a = data['u'][-ntest:, ::r, ::r, :T_in][:, :h, :h, :]
+test_a = test_a.reshape(test_a.shape[0], -1, test_a.shape[-1])
+test_a = torch.from_numpy(test_a)
+test_a = test_a.permute(0, 2, 1)
 
-x_normalizer = UnitTransformer(x_train)
-y_normalizer = UnitTransformer(y_train)
+test_u = data['u'][-ntest:, ::r, ::r, T_in:T + T_in][:, :h, :h, :]
+test_u = test_u.reshape(test_u.shape[0], -1, test_u.shape[-1])
+test_u = torch.from_numpy(test_u)
+test_u = test_u.permute(0, 2, 1)
 
-x_train = x_normalizer.encode(x_train)
-x_test = x_normalizer.encode(x_test)
-y_train = y_normalizer.encode(y_train)
-
-# y_test is not encoded
-
-x_normalizer.to(device)
-y_normalizer.to(device)
-
-x = np.linspace(0, 1, s)
-y = np.linspace(0, 1, s)
+x = np.linspace(0, 1, h)
+y = np.linspace(0, 1, h)
 x, y = np.meshgrid(x, y)
 pos = np.c_[x.ravel(), y.ravel()]
 pos = torch.tensor(pos, dtype=torch.float).unsqueeze(0)
-pos = pos.permute(0, 2, 1)
 
+pos = pos.permute(0, 2 ,1)
 pos_train = pos.repeat(ntrain, 1, 1)
 pos_test = pos.repeat(ntest, 1, 1)
 
 ## latent position
 query_pos = make_2d_grid(query_dims).permute(1, 0)  # [2, 16x16]
 
+#%%
+# channel = 10
+
+#%%
 train_dataset = SimDataset_PDE(
-    input_data=x_train, output_data=y_train, pos=pos_train, query_pos=query_pos
+    input_data=train_a, output_data=train_u, pos=pos_train, query_pos=query_pos
 )
 test_dataset = SimDataset_PDE(
-    input_data=x_test, output_data=y_test, pos=pos_test, query_pos=query_pos
+    input_data=test_a, output_data=test_u, pos=pos_test, query_pos=query_pos
 )
 
 train_loader = DataLoader(
@@ -233,14 +232,11 @@ test_loader = DataLoader(
 print('Dataloading is over.')
 
 
-# ## Model Initialization
-# %%
-
 # %%
 
 model = MINO(
     encoder=EncoderSupernodes(
-        input_dim=1,  # co-domain
+        input_dim=10,  # co-domain
         ndim=2,  # dimension of domain
         radius=0.07,
         enc_dim=dim,
@@ -255,6 +251,8 @@ model = MINO(
         num_heads=num_heads,
         depth=2,  # 2 layers
         unbatch_mode='dense_to_sparse_unpadded',
+        in_out_dim_same=False,
+        val_dim=10,
     ),
 )
 model = model.to(device)
@@ -266,79 +264,54 @@ optimizer = optim.AdamW(model.parameters(), lr=1e-4)
 scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=50, gamma=0.8)
 
 myloss = TestLoss(size_average=False)
-de_x = TestLoss(size_average=False)
-de_y = TestLoss(size_average=False)
 
 # In[11]:
 
 
 for ep in range(1, epochs + 1):
     model.train()
-    train_loss = 0
-    reg = 0
-    test_losses = []
+    train_l2_step = 0
+    train_l2_full = 0
+
     for batch_pack in train_loader:
         batch = batch_pack['input_feat'].to(device)  # [batch_size, n_chan, n_seq]
         pos = batch_pack['input_pos'].to(device)  # [batch_size, x_dim, n_seq]
         query_pos = batch_pack['query_pos'].to(device)
         out_batch = batch_pack['output_feat'].to(device)
 
+        bsz = batch.shape[0]
+        loss = 0
+
+        for t in range(0, T, step):
+            one_step_forward = out_batch[:, t:t + step, :]
+
+            one_step_predict = model(input_feat=batch, input_pos=pos, query_pos=query_pos)
+            # progressively update the batch 
+            loss += myloss(one_step_predict.reshape(bsz, -1), one_step_forward.reshape(bsz, -1))
+            if t == 0:
+                pred = one_step_predict
+            else:
+                pred = torch.cat((pred, one_step_predict), 1) #concatenate them along channel dim
+
+            batch = torch.cat((batch[:,step:,:], one_step_forward), dim=1) # ground truth
+
+        train_l2_step += loss.item()
+        train_l2_full += myloss(pred.reshape(bsz, -1), out_batch.reshape(bsz, -1)).item()
         optimizer.zero_grad()
-
-        out = model(input_feat=batch, input_pos=pos, query_pos=query_pos)
-        out = y_normalizer.decode(out)  # 'b, c, (h w)'
-        out_batch = y_normalizer.decode(out_batch)  # 'b, c, (h w)'
-
-        l2loss = myloss(out, out_batch)
-
-        # derivative loss for Darcy Flow dataset
-        """
-        out = rearrange(out, 'b c (h w) -> b c h w', h=s)
-        out = out[..., 1:-1, 1:-1].contiguous()
-        out = F.pad(out, (1, 1, 1, 1), "constant", 0)
-        out = rearrange(out, 'b c h w -> b c (h w)')
-        gt_grad_x, gt_grad_y = central_diff(out_batch, dx, s)
-        pred_grad_x, pred_grad_y = central_diff(out, dx, s)
-        deriv_loss = de_x(pred_grad_x, gt_grad_x) + de_y(pred_grad_y, gt_grad_y)
-        loss = 0.1 * deriv_loss + l2loss
-        loss.backward()   
-        """
-        l2loss.backward()
+        loss.backward()
 
         optimizer.step()
-        train_loss += l2loss.item()
         # reg += deriv_loss.item()
     scheduler.step()
 
-    train_loss /= ntrain
-    reg /= ntrain
-    print('Epoch {} Reg : {:.5f} Train loss : {:.5f}'.format(ep, reg, train_loss))
+    ## 
+    # plot save
 
-    if ep % 5 == 0:
-        fig, axs = plt.subplots(1, 3, figsize=(12, 4))
-
-        # Show input batch
-        im0 = axs[0].imshow(batch[0, 0].reshape(85, 85).detach().cpu().numpy())
-        axs[0].set_title('Input')
-        fig.colorbar(im0, ax=axs[0])
-
-        # Show model output
-        im1 = axs[1].imshow(out[0, 0].reshape(85, 85).detach().cpu().numpy())
-        axs[1].set_title(f'Epoch {ep} - Predicted')
-        fig.colorbar(im1, ax=axs[1])
-
-        # Show ground truth
-        im2 = axs[2].imshow(out_batch[0, 0].reshape(85, 85).detach().cpu().numpy())
-        axs[2].set_title(f'Epoch {ep} - Ground Truth')
-        fig.colorbar(im2, ax=axs[2])
-
-        # Save figure
-        plt.tight_layout()
-        plt.savefig(spath / f'epoch_{ep}_train.png')
-        plt.close(fig)
+    test_l2_step = 0
+    test_l2_full = 0
 
     model.eval()
-    rel_err = 0.0
+
     with torch.no_grad():
         for batch_pack in test_loader:
             batch = batch_pack['input_feat'].to(device)  # [batch_size, n_chan, n_seq]
@@ -346,35 +319,53 @@ for ep in range(1, epochs + 1):
             query_pos = batch_pack['query_pos'].to(device)
             out_batch = batch_pack['output_feat'].to(device)
 
-            out = model(input_feat=batch, input_pos=pos, query_pos=query_pos)
-            out = y_normalizer.decode(out)  # 'b, c, (h w)'
+            bsz = batch.shape[0]
+            loss = 0
 
-            tl = myloss(out, out_batch).item()
-            rel_err += tl
+            for t in range(0, T, step):
+                one_step_forward = out_batch[:, t:t + step, :]
+                one_step_predict = model(input_feat=batch, input_pos=pos, query_pos=query_pos)
+                # progressively update the batch 
+                loss += myloss(one_step_predict.reshape(bsz, -1), one_step_forward.reshape(bsz, -1))
+                if t == 0:
+                    pred = one_step_predict
+                else:
+                    pred = torch.cat((pred, one_step_predict), 1) #concatenate them along channel dim
 
-        if ep % 5 == 0:
-            fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+                batch = torch.cat((batch[:,step:,:], one_step_predict), dim=1) # ground truth
+            test_l2_step += loss.item()
+            test_l2_full += myloss(pred.reshape(bsz, -1), out_batch.reshape(bsz, -1)).item()
+            
+    if ep % 5 == 0:
+        batch_idx = 0
+        even_indices = np.arange(0, 10, 2)  # [0, 2, 4, 6, 8]
 
-            # Show model output
-            im0 = axs[0].imshow(out[0, 0].reshape(85, 85).detach().cpu().numpy())
-            axs[0].set_title(f'Epoch {ep} - Predicted')
-            fig.colorbar(im0, ax=axs[0])
+        predict_snapshots = pred[batch_idx, even_indices, :].detach().cpu().numpy()     # shape: [5, 4096]
+        out_snapshots = out_batch[batch_idx, even_indices, :].detach().cpu().numpy()       # shape: [5, 4096]
 
-            # Show ground truth
-            im1 = axs[1].imshow(out_batch[0, 0].reshape(85, 85).detach().cpu().numpy())
-            axs[1].set_title(f'Epoch {ep} - Ground Truth')
-            fig.colorbar(im1, ax=axs[1])
+        fig, axes = plt.subplots(2, 5, figsize=(18, 6))
 
-            # Save figure
-            plt.tight_layout()
-            plt.savefig(spath / f'epoch_{ep}_val.png')
-            # print('yes, val {}'.format(spath / f'epoch_{ep}_val.png'))
-            plt.close(fig)
+        for i in range(5):
+            # Predict row (first)
+            axes[0, i].imshow(predict_snapshots[i].reshape(64, 64), cmap='viridis')
+            axes[0, i].set_title(f'Predict #{even_indices[i]}')
+            axes[0, i].axis('off')
+            # Out_batch row (second)
+            axes[1, i].imshow(out_snapshots[i].reshape(64, 64), cmap='viridis')
+            axes[1, i].set_title(f'GT #{even_indices[i]}')
+            axes[1, i].axis('off')
 
-        rel_err /= ntest
-        print('rel_err:{}'.format(rel_err))
+        axes[0, 0].set_ylabel("Predict", fontsize=14)
+        axes[1, 0].set_ylabel("Ground Truth", fontsize=14)
+        plt.tight_layout()
 
-    test_losses.append(rel_err)
+        plt.savefig(spath / f'epoch_{ep}_test.png')
+        plt.close(fig)
+
+    print(
+        "Epoch {} , train_step_loss:{:.5f} , train_full_loss:{:.5f} , test_step_loss:{:.5f} , test_full_loss:{:.5f}".format(
+            ep, train_l2_step / ntrain / (T / step), train_l2_full / ntrain, test_l2_step / ntest / (T / step),
+                test_l2_full / ntest))
     ##### BOOKKEEPING
     if saved_model == True:
         if ep % save_int == 0:
@@ -384,18 +375,3 @@ for ep in range(1, epochs + 1):
 
 # ## Evaluation
 
-# In[7]:
-
-
-# load the trained model
-"""
-spath = Path('/net/ghisallo/scratch1/yshi5/OFM_PDE/GITO_exp/GITO_T_NS')
-
-for param in model.parameters():
-    param.requires_grad = False
-    
-model_path = os.path.join(spath, 'epoch_500.pt')
-checkpoint = torch.load(model_path, map_location='cpu', weights_only=False)
-model.load_state_dict(checkpoint, strict=False)
-
-"""
