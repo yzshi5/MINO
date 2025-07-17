@@ -45,7 +45,7 @@ query_dims = [16, 16]
 x_dim = 2
 
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
-spath = Path('/home/yshi/PDE_solving/dataset/saved/MINO_T_NS_time_PDE')
+spath = Path('yourdata/MINO_T_NS_time_PDE')
 
 spath.mkdir(parents=True, exist_ok=True)
 saved_model = True # save model
