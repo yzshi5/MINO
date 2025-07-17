@@ -38,21 +38,6 @@ from models.mino_modules.decoder_perceiver import DecoderPerceiver
 from models.mino_modules.encoder_supernodes_gno_cross_attention import EncoderSupernodes
 
 
-# ## Parameters
-
-# In[2]:
-
-torch.cuda.is_available()
-
-
-# In[4]:
-# print current hostname (computation node)
-import socket
-
-print(socket.gethostname())
-
-
-# In[10]:
 
 
 dims = [64, 64]
