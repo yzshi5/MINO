@@ -55,7 +55,7 @@ bash scripts/NS_MINO_T.sh
 Set `eval` as 1 for inference only, check `exp` folder for more details, 
 
 ## Unconditional version for PDE solving
-Example of applying MINO for on solving Darcy Flow and N-S PDE problem under `surrogate_PDE` folder, see [Transolver]( https://github.com/thuml/Transolver/tree/main/PDE-Solving-StandardBenchmark) for more details
+Example of applying MINO for solving Darcy Flow and N-S PDE problem under `surrogate_PDE` folder, see [Transolver]( https://github.com/thuml/Transolver/tree/main/PDE-Solving-StandardBenchmark) for more details
 
 
 ## Acknowledgement
