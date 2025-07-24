@@ -15,7 +15,6 @@ from geometric_kernels.kernels import MaternGeometricKernel
 
 from geometric_kernels.kernels import default_feature_map
 from geometric_kernels.sampling import sampler
-from geometric_kernels.kernels import default_feature_map
 
 # Gaussian Process sequence. 
 
