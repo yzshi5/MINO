@@ -181,7 +181,8 @@ def main():
 
         X_alt = torch.vstack(X_alt).squeeze()
 
-
+        X_alt = X_alt.reshape(X_alt.shape[0], *args.dims)
+        
         bin_center, x_acovf = compute_acovf(X_alt.squeeze())
         _, x_acovf_true = compute_acovf(x_test.squeeze())
         x_hist, bin_edges_alt = X_alt.histogram(range=[0,8], density=True)
