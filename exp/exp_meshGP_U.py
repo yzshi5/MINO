@@ -224,7 +224,6 @@ def main():
 
         X_alt = torch.vstack(X_alt).squeeze()
 
-        X_alt = X_alt.reshape(X_alt.shape[0], *args.dims)
 
     end = time.time()
     print("Generation time :{} s".format(end-start))
