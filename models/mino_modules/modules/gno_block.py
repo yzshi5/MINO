@@ -10,7 +10,8 @@ from neuralop.layers.channel_mlp import LinearChannelMLP
 from .integral_transform import IntegralTransform
 from neuralop.layers.neighbor_search import NeighborSearch
 from neuralop.layers.embeddings import SinusoidalEmbedding
-from kappamodules.layers import ContinuousSincosEmbed
+#from kappamodules.layers import ContinuousSincosEmbed
+from ..conditioner_timestep import ContinuousSincosEmbed
 
 # used for nonlinear kernel integral only 
 class GNOBlock(nn.Module):
