@@ -8,11 +8,13 @@ import torch.nn.functional as F
 
 from torchcfm.models.unet.nn import *
 from torchcfm.models.unet.fp16_util import convert_module_to_f16, convert_module_to_f32
-#from torchcfm.models.unet.unet import *
+# from torchcfm.models.unet.unet import *
+
 
 def to_shape(x, dim):
     n_channels = x.shape[-1]
     return x.permute(0, 2, 1).reshape(x.shape[0], n_channels, *dim)
+
 
 def to_flatten(x):
     # x : [batch_size, n_chan, *dims]
@@ -20,6 +22,8 @@ def to_flatten(x):
 
 
 """From https://raw.githubusercontent.com/openai/guided-diffusion/main/guided_diffusion/unet.py."""
+
+
 class AttentionPool2d(nn.Module):
     """Adapted from CLIP: https://github.com/openai/CLIP/blob/main/clip/model.py."""
 
@@ -70,7 +74,7 @@ class TimestepEmbedSequential(nn.Sequential, TimestepBlock):
                 x = layer(x)
         return x
 
-    
+
 class Upsample(nn.Module):
     """An upsampling layer with an optional convolution.
 
@@ -92,9 +96,9 @@ class Upsample(nn.Module):
     def forward(self, x):
         assert x.shape[1] == self.channels
         if self.dims == 3:
-            x = F.interpolate(x, (x.shape[2]*2, x.shape[3] * 2, x.shape[4] * 2), mode="nearest")
+            x = F.interpolate(x, (x.shape[2] * 2, x.shape[3] * 2, x.shape[4] * 2), mode='nearest')
         else:
-            x = F.interpolate(x, scale_factor=2, mode="nearest")
+            x = F.interpolate(x, scale_factor=2, mode='nearest')
         if self.use_conv:
             x = self.conv(x)
         return x
@@ -254,9 +258,9 @@ class AttentionBlock(nn.Module):
         if num_head_channels == -1:
             self.num_heads = num_heads
         else:
-            assert (
-                channels % num_head_channels == 0
-            ), f"q,k,v channels {channels} is not divisible by num_head_channels {num_head_channels}"
+            assert channels % num_head_channels == 0, (
+                f'q,k,v channels {channels} is not divisible by num_head_channels {num_head_channels}'
+            )
             self.num_heads = channels // num_head_channels
         self.use_checkpoint = use_checkpoint
         self.norm = normalization(channels)
@@ -323,10 +327,10 @@ class QKVAttentionLegacy(nn.Module):
         q, k, v = qkv.reshape(bs * self.n_heads, ch * 3, length).split(ch, dim=1)
         scale = 1 / math.sqrt(math.sqrt(ch))
         weight = th.einsum(
-            "bct,bcs->bts", q * scale, k * scale
+            'bct,bcs->bts', q * scale, k * scale
         )  # More stable with f16 than dividing afterwards
         weight = th.softmax(weight.float(), dim=-1).type(weight.dtype)
-        a = th.einsum("bts,bcs->bct", weight, v)
+        a = th.einsum('bts,bcs->bct', weight, v)
         return a.reshape(bs, -1, length)
 
     @staticmethod
@@ -353,12 +357,12 @@ class QKVAttention(nn.Module):
         q, k, v = qkv.chunk(3, dim=1)
         scale = 1 / math.sqrt(math.sqrt(ch))
         weight = th.einsum(
-            "bct,bcs->bts",
+            'bct,bcs->bts',
             (q * scale).view(bs * self.n_heads, ch, length),
             (k * scale).view(bs * self.n_heads, ch, length),
         )  # More stable with f16 than dividing afterwards
         weight = th.softmax(weight.float(), dim=-1).type(weight.dtype)
-        a = th.einsum("bts,bcs->bct", weight, v.reshape(bs * self.n_heads, ch, length))
+        a = th.einsum('bts,bcs->bct', weight, v.reshape(bs * self.n_heads, ch, length))
         return a.reshape(bs, -1, length)
 
     @staticmethod
@@ -418,6 +422,7 @@ class UNetModel(nn.Module):
         resblock_updown=False,
         use_new_attention_order=False,
         dims_latent=None,
+        timestep_embed_scale=256,
     ):
         super().__init__()
 
@@ -440,6 +445,7 @@ class UNetModel(nn.Module):
         self.num_head_channels = num_head_channels
         self.num_heads_upsample = num_heads_upsample
         self.dims_latent = dims_latent
+        self.timestep_embed_scale = timestep_embed_scale
 
         time_embed_dim = model_channels * 4
         self.time_embed = nn.Sequential(
@@ -449,7 +455,7 @@ class UNetModel(nn.Module):
         )
 
         if self.num_classes is not None:
-            #self.label_emb = nn.Embedding(num_classes, time_embed_dim)
+            # self.label_emb = nn.Embedding(num_classes, time_embed_dim)
             self.label_emb = nn.Sequential(
                 linear(num_classes, time_embed_dim),
                 nn.SiLU(),
@@ -613,9 +619,9 @@ class UNetModel(nn.Module):
         :return: an [N x C x ...] Tensor of outputs.
         """
         timesteps = t
-        assert (y is not None) == (
-            self.num_classes is not None
-        ), "must specify y if and only if the model is class-conditional"
+        assert (y is not None) == (self.num_classes is not None), (
+            'must specify y if and only if the model is class-conditional'
+        )
         while timesteps.dim() > 1:
             print(timesteps.shape)
             timesteps = timesteps[:, 0]
@@ -623,10 +629,10 @@ class UNetModel(nn.Module):
             timesteps = timesteps.repeat(x.shape[0])
 
         hs = []
-        emb = self.time_embed(timestep_embedding(timesteps, self.model_channels))
+        emb = self.time_embed(timestep_embedding(timesteps*self.timestep_embed_scale, self.model_channels))
 
         if self.num_classes is not None:
-            #assert y.shape[0] == (x.shape[0],)
+            # assert y.shape[0] == (x.shape[0],)
             emb = emb + self.label_emb(y)
 
         h = x.type(self.dtype)
@@ -652,7 +658,7 @@ class SuperResModel(UNetModel):
 
     def forward(self, x, timesteps, low_res=None, **kwargs):
         _, _, new_height, new_width = x.shape
-        upsampled = F.interpolate(low_res, (new_height, new_width), mode="bilinear")
+        upsampled = F.interpolate(low_res, (new_height, new_width), mode='bilinear')
         x = th.cat([x, upsampled], dim=1)
         return super().forward(x, timesteps, **kwargs)
 
@@ -683,7 +689,7 @@ class EncoderUNetModel(nn.Module):
         use_scale_shift_norm=False,
         resblock_updown=False,
         use_new_attention_order=False,
-        pool="adaptive",
+        pool='adaptive',
     ):
         super().__init__()
 
@@ -795,7 +801,7 @@ class EncoderUNetModel(nn.Module):
         )
         self._feature_size += ch
         self.pool = pool
-        if pool == "adaptive":
+        if pool == 'adaptive':
             self.out = nn.Sequential(
                 normalization(ch),
                 nn.SiLU(),
@@ -803,20 +809,20 @@ class EncoderUNetModel(nn.Module):
                 zero_module(conv_nd(dims, ch, out_channels, 1)),
                 nn.Flatten(),
             )
-        elif pool == "attention":
+        elif pool == 'attention':
             assert num_head_channels != -1
             self.out = nn.Sequential(
                 normalization(ch),
                 nn.SiLU(),
                 AttentionPool2d((image_size // ds), ch, num_head_channels, out_channels),
             )
-        elif pool == "spatial":
+        elif pool == 'spatial':
             self.out = nn.Sequential(
                 nn.Linear(self._feature_size, 2048),
                 nn.ReLU(),
                 nn.Linear(2048, self.out_channels),
             )
-        elif pool == "spatial_v2":
+        elif pool == 'spatial_v2':
             self.out = nn.Sequential(
                 nn.Linear(self._feature_size, 2048),
                 normalization(2048),
@@ -824,7 +830,7 @@ class EncoderUNetModel(nn.Module):
                 nn.Linear(2048, self.out_channels),
             )
         else:
-            raise NotImplementedError(f"Unexpected {pool} pooling")
+            raise NotImplementedError(f'Unexpected {pool} pooling')
 
     def convert_to_fp16(self):
         """Convert the torso of the model to float16."""
@@ -849,10 +855,10 @@ class EncoderUNetModel(nn.Module):
         h = x.type(self.dtype)
         for module in self.input_blocks:
             h = module(h, emb)
-            if self.pool.startswith("spatial"):
+            if self.pool.startswith('spatial'):
                 results.append(h.type(x.dtype).mean(dim=(2, 3)))
         h = self.middle_block(h, emb)
-        if self.pool.startswith("spatial"):
+        if self.pool.startswith('spatial'):
             results.append(h.type(x.dtype).mean(dim=(2, 3)))
             h = th.cat(results, axis=-1)
             return self.out(h)
@@ -875,7 +881,7 @@ class UNetModelWrapper(UNetModel):
         set_cond=False,
         num_conds=NUM_CLASSES,
         use_checkpoint=False,
-        attention_resolutions="16",
+        attention_resolutions='16',
         num_heads=1,
         num_head_channels=-1,
         num_heads_upsample=-1,
@@ -898,27 +904,28 @@ class UNetModelWrapper(UNetModel):
                 channel_mult = (1, 2, 3, 4)
             elif image_size == 32:
                 channel_mult = (1, 2, 2, 2)
-            #elif image_size == 32:
-                #channel_mult = (1, 2, 3, 4)
+            # elif image_size == 32:
+            # channel_mult = (1, 2, 3, 4)
             elif image_size == 28:
-                #channel_mult = (1, 2, 2)
+                # channel_mult = (1, 2, 2)
                 channel_mult = (1, 2, 2, 2)
             elif image_size == 16:
                 channel_mult = (1, 2, 2, 2)
             elif image_size == 8:
                 channel_mult = (1, 2, 2, 2)
-            else : channel_mult = (1, 2, 2, 2)
-            #else:
-                #raise ValueError(f"unsupported image size: {image_size}")
+            else:
+                channel_mult = (1, 2, 2, 2)
+            # else:
+            # raise ValueError(f"unsupported image size: {image_size}")
         else:
             channel_mult = list(channel_mult)
 
         attention_ds = []
-        for res in attention_resolutions.split(","):
+        for res in attention_resolutions.split(','):
             attention_ds.append(image_size // int(res))
 
         return super().__init__(
-            dims = len(dim)-1,
+            dims=len(dim) - 1,
             image_size=image_size,
             in_channels=dim[0],
             model_channels=num_channels,
@@ -936,14 +943,14 @@ class UNetModelWrapper(UNetModel):
             use_scale_shift_norm=use_scale_shift_norm,
             resblock_updown=resblock_updown,
             use_new_attention_order=use_new_attention_order,
-            dims_latent = dim[1:]
+            dims_latent=dim[1:],
         )
 
     def forward(self, t, x, y=None, *args, **kwargs):
-        #print('x before:{}'.format(x.shape))
+        # print('x before:{}'.format(x.shape))
         x = to_shape(x, self.dims_latent)
-        #print('x after:{}'.format(x.shape))        
-        
+        # print('x after:{}'.format(x.shape))
+
         return to_flatten(super().forward(t, x, y=y))
-    
+
         # to flatten and to shape
