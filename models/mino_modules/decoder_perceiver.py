@@ -2,7 +2,8 @@ from functools import partial
 
 import einops
 import torch
-from kappamodules.layers import ContinuousSincosEmbed, LinearProjection
+from kappamodules.layers import LinearProjection
+from .conditioner_timestep import ContinuousSincosEmbed
 from kappamodules.transformer import PerceiverBlock, DitPerceiverBlock
 from torch import nn
 import math
