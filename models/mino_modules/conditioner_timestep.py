@@ -2,7 +2,7 @@
 # from kappamodules.functional.pos_embed import get_sincos_1d_from_grid
 import torch
 from torch import nn
-
+import einops
 
 def get_sincos_1d_from_grid(grid, dim: int, max_wavelength: int = 10000, scale : int = 256):
     # The grid is assumed to be [-1 ,1] or [0, 1] (small)
@@ -58,11 +58,6 @@ class ConditionerTimestep(nn.Module):
         # embed = self.mlp(self.timestep_embed[timestep])
         embed = self.mlp(get_sincos_1d_from_grid(timestep, dim=self.dim))
         return embed
-
-
-import einops
-import torch
-from torch import nn
 
 
 class ContinuousSincosEmbed(nn.Module):
