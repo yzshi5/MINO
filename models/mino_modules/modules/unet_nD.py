@@ -422,7 +422,7 @@ class UNetModel(nn.Module):
         resblock_updown=False,
         use_new_attention_order=False,
         dims_latent=None,
-        timestep_embed_scale=256,
+        timestep_embed_scale=128,
     ):
         super().__init__()
 
