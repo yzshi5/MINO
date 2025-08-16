@@ -4,7 +4,7 @@ import torch
 from torch import nn
 import einops
 
-def get_sincos_1d_from_grid(grid, dim: int, max_wavelength: int = 10000, scale : int = 256):
+def get_sincos_1d_from_grid(grid, dim: int, max_wavelength: int = 10000, scale : int = 128):
     # The grid is assumed to be [-1 ,1] or [0, 1] (small)
     if dim % 2 == 0:
         padding = None
@@ -61,7 +61,7 @@ class ConditionerTimestep(nn.Module):
 
 
 class ContinuousSincosEmbed(nn.Module):
-    def __init__(self, dim, ndim, max_wavelength: int = 10000, dtype=torch.float32, scale : int = 256):
+    def __init__(self, dim, ndim, max_wavelength: int = 10000, dtype=torch.float32, scale : int = 128):
         super().__init__()
         # assume the domain is small, like [-1, 1]^n or [0, 1]^n, add scale to enhance the performance position encoding
         # by careful of the Nyquist frequency (scale should be too large, otherwise bring aliasing) 
