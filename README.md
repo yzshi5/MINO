@@ -1,4 +1,4 @@
-# Mesh-Informed Neural Operator : A Transformer Generative Approach
+# Mesh-Informed Neural Operator : A Transformer Generative Approach (TMLR 2025)
 
 
 ### [MINO Paper](https://www.arxiv.org/abs/2506.16656) 
