@@ -15,6 +15,6 @@ python "exp/exp_climate_U.py" \
     --num_unet_heads 4 \
     --attention_res '8' \
     --enc_depth 2 \
-    --dec_depth 2 \
+    --dec_depth 1 \
     --eval 0
 
