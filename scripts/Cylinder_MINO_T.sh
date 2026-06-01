@@ -11,6 +11,6 @@ python "exp/exp_cylinder_T.py" \
     --dim 256 \
     --num_heads 4 \
     --enc_depth 5 \
-    --dec_depth 2 \
+    --dec_depth 1 \
     --eval 0
 
